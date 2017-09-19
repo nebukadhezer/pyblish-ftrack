@@ -136,6 +136,42 @@ class PyblishFtrackIntegrateFtrackApi(pyblish.api.InstancePlugin):
             existing_assetversion_metadata.update(assetversion_metadata)
             assetversion_entity["metadata"] = existing_assetversion_metadata
 
+            ## manage thumbnails
+            thumbnail_path = data.get("thumbnail_path", "")
+            if thumbnail_path and os.path.isfile(thumbnail_path):
+                self.log.info(
+                    'Got thumbnail: {0!r}.'.format(
+                        thumbnail_path
+                    )
+                )
+                thumbnail_component = assetversion_entity.create_thumbnail(thumbnail_path)
+                self.log.info(thumbnail_component)
+                if data.get("propagate_thumb_to_parents", False):
+                    # we can use True for 1 and False for 0 or just an int above 1 to propagate through to the number of parents
+                    # 1 is the task where the asset version is linked to
+                    # 2 would be the parent of the task 
+                    # 3 would be the parent of the parent of the task and so on
+                    parent_count = data["propagate_thumb_to_parents"]
+                    self.log.debug("propagating thumbnail")
+                    entities = []
+                    for item in task['link']:
+                        entities.insert(0,session.get(item['type'], item['id']))
+                    self.log.debug("found entities %s " % entities) 
+                    for entity in entities[:parent_count]: 
+                        if "thumbnail" in entity.keys():
+                            self.log.info("found thumbnail field on %s propagating" % entity) 
+                            entity["thumbnail"] = thumbnail_component
+                        else:
+                            continue
+                    task.session.commit()
+            else:
+                self.log.info(
+                    'Thumbnail file did not exist: {0!r}.'.format(
+                        thumbnail_path
+                    )
+                )
+
+
             # Have to commit the version and asset, because location can't
             # determine the final location without.
             session.commit()
