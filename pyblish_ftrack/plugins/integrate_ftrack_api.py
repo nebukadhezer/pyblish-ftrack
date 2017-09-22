@@ -146,12 +146,12 @@ class PyblishFtrackIntegrateFtrackApi(pyblish.api.InstancePlugin):
                 )
                 thumbnail_component = assetversion_entity.create_thumbnail(thumbnail_path)
                 self.log.info(thumbnail_component)
-                if data.get("propagate_thumb_to_parents", False):
+                if data.get("propagate_thumbnail", False):
                     # we can use True for 1 and False for 0 or just an int above 1 to propagate through to the number of parents
                     # 1 is the task where the asset version is linked to
                     # 2 would be the parent of the task 
                     # 3 would be the parent of the parent of the task and so on
-                    parent_count = data["propagate_thumb_to_parents"]
+                    parent_count = data["propagate_thumbnail"]
                     self.log.debug("propagating thumbnail")
                     entities = []
                     for item in task['link']:
